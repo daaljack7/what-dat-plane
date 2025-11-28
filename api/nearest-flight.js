@@ -28,12 +28,15 @@ export default async function handler(req, res) {
       {
         headers: {
           'Accept': 'application/json',
+          'User-Agent': 'WhatDatPlane/1.0'
         },
       }
     );
 
     if (!response.ok) {
-      throw new Error(`OpenSky API error: ${response.status}`);
+      const errorText = await response.text();
+      console.error('OpenSky API error:', response.status, errorText);
+      throw new Error(`OpenSky API error: ${response.status} - ${errorText}`);
     }
 
     const data = await response.json();
