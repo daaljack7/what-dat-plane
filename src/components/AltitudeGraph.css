@@ -1,0 +1,27 @@
+.altitude-graph {
+  margin-top: 2rem;
+  padding-top: 2rem;
+  border-top: 2px solid #e5e7eb;
+}
+
+.altitude-graph h3 {
+  margin: 0 0 1rem;
+  color: #1f2937;
+  font-size: 1.5rem;
+}
+
+.graph-svg {
+  width: 100%;
+  height: auto;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  margin-top: 1rem;
+}
+
+.no-data {
+  text-align: center;
+  padding: 2rem;
+  color: #9ca3af;
+  font-style: italic;
+}

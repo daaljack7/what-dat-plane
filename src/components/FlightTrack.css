@@ -1,0 +1,68 @@
+.flight-track {
+  margin-top: 2rem;
+  padding-top: 2rem;
+  border-top: 2px solid #e5e7eb;
+}
+
+.flight-track h3 {
+  margin: 0 0 1rem;
+  color: #1f2937;
+  font-size: 1.5rem;
+}
+
+.track-info {
+  margin-bottom: 1rem;
+  color: #6b7280;
+  font-size: 0.875rem;
+}
+
+.track-info p {
+  margin: 0;
+}
+
+.no-data {
+  text-align: center;
+  padding: 2rem;
+  color: #9ca3af;
+  font-style: italic;
+}
+
+.track-svg {
+  width: 100%;
+  height: auto;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  margin: 1rem 0;
+}
+
+.track-legend {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  margin-top: 1rem;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.legend-color {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid white;
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.2);
+}
+
+.legend-color.start {
+  background-color: #10b981;
+}
+
+.legend-color.current {
+  background-color: #ef4444;
+}

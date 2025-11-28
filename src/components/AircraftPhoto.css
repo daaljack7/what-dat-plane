@@ -1,0 +1,55 @@
+.aircraft-photo {
+  margin-top: 2rem;
+  padding-top: 2rem;
+  border-top: 2px solid #e5e7eb;
+}
+
+.aircraft-photo h3 {
+  margin: 0 0 1rem;
+  color: #1f2937;
+  font-size: 1.5rem;
+}
+
+.photo-loading {
+  text-align: center;
+  padding: 3rem;
+}
+
+.photo-placeholder {
+  background: #f9fafb;
+  border: 2px dashed #d1d5db;
+  border-radius: 8px;
+  padding: 3rem 2rem;
+  text-align: center;
+}
+
+.placeholder-icon {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+  opacity: 0.5;
+}
+
+.placeholder-text {
+  color: #6b7280;
+  font-size: 0.875rem;
+  margin: 0 0 0.5rem;
+}
+
+.placeholder-subtext {
+  color: #9ca3af;
+  font-size: 0.75rem;
+  margin: 0;
+  font-family: 'Courier New', monospace;
+}
+
+.photo-container {
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.photo-container img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
