@@ -16,7 +16,10 @@ export default async function handler(req, res) {
   try {
     const url = 'https://opensky-network.org/api/tracks/all?icao24=' + icao24 + '&time=0';
     const response = await fetch(url, {
-      headers: { 'Accept': 'application/json' }
+      headers: {
+        'Accept': 'application/json',
+        'User-Agent': 'WhatDatPlane/1.0'
+      }
     });
     
     const data = await response.json();
