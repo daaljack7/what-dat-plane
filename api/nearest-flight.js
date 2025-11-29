@@ -22,16 +22,21 @@ export default async function handler(req, res) {
   const latitude = parseFloat(lat);
   const longitude = parseFloat(lon);
 
+  // Define bounding box: ~2 degrees (~220km) around the point
+  const lamin = latitude - 2;
+  const lamax = latitude + 2;
+  const lomin = longitude - 2;
+  const lomax = longitude + 2;
+
   try {
-    const response = await fetch(
-      `https://opensky-network.org/api/states/all`,
-      {
-        headers: {
-          'Accept': 'application/json',
-          'User-Agent': 'WhatDatPlane/1.0'
-        },
-      }
-    );
+    // Use bounding box to reduce data and improve reliability
+    const url = `https://opensky-network.org/api/states/all?lamin=${lamin}&lomin=${lomin}&lamax=${lamax}&lomax=${lomax}`;
+    const response = await fetch(url, {
+      headers: {
+        'Accept': 'application/json',
+        'User-Agent': 'WhatDatPlane/1.0'
+      },
+    });
 
     if (!response.ok) {
       const errorText = await response.text();
