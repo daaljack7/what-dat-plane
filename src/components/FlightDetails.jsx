@@ -148,7 +148,11 @@ function FlightDetails({ flight, locationName }) {
         </div>
       </div>
 
-      <AircraftPhoto icao24={flight.icao24} callsign={flight.callsign} />
+      <AircraftPhoto
+        icao24={flight.icao24}
+        callsign={flight.callsign}
+        registration={flight.registration}
+      />
 
       {loadingTrack && (
         <div className="loading-track">

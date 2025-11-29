@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import './AircraftPhoto.css';
 
-function AircraftPhoto({ icao24, callsign }) {
+function AircraftPhoto({ icao24, callsign, registration }) {
   const [photoData, setPhotoData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -12,9 +12,12 @@ function AircraftPhoto({ icao24, callsign }) {
       setError(false);
 
       try {
-        const response = await fetch(
-          `/api/aircraft-photo?icao24=${icao24}`
-        );
+        // Pass registration if available to improve photo lookup
+        const params = new URLSearchParams({ icao24 });
+        if (registration) {
+          params.append('registration', registration);
+        }
+        const response = await fetch(`/api/aircraft-photo?${params}`);
 
         if (response.ok) {
           const data = await response.json();
@@ -35,7 +38,7 @@ function AircraftPhoto({ icao24, callsign }) {
     };
 
     fetchPhoto();
-  }, [icao24]);
+  }, [icao24, registration]);
 
   if (loading) {
     return (

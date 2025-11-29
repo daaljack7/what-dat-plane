@@ -18,35 +18,20 @@ export default async function handler(req, res) {
   }
 
   try {
-    let reg = registration;
-
-    if (!reg && icao24) {
-      const aircraftResponse = await fetch(
-        `https://opensky-network.org/api/metadata/aircraft/icao/${icao24.toLowerCase()}`,
-        {
-          headers: {
-            'Accept': 'application/json',
-          },
-        }
-      );
-
-      if (aircraftResponse.ok) {
-        const aircraftData = await aircraftResponse.json();
-        reg = aircraftData.registration;
-      }
-    }
-
-    if (!reg) {
+    // Only proceed if we have a registration number
+    // OpenSky Network API is blocked from Vercel, so we can't look up registration from ICAO24
+    if (!registration) {
       return res.status(200).json({
         registration: null,
         photoUrl: null,
         thumbnail: null,
         photographer: null,
+        message: 'Registration number not available - photo lookup requires aircraft registration'
       });
     }
 
     const photoResponse = await fetch(
-      `https://api.planespotters.net/pub/photos/reg/${reg}`,
+      `https://api.planespotters.net/pub/photos/reg/${registration}`,
       {
         headers: {
           'Accept': 'application/json',
@@ -56,10 +41,11 @@ export default async function handler(req, res) {
 
     if (!photoResponse.ok) {
       return res.status(200).json({
-        registration: reg,
+        registration: registration,
         photoUrl: null,
         thumbnail: null,
         photographer: null,
+        message: 'No photo found for this aircraft on Planespotters.net'
       });
     }
 
@@ -69,7 +55,7 @@ export default async function handler(req, res) {
       : null;
 
     const result = {
-      registration: reg,
+      registration: registration,
       photoUrl: photo?.image?.src || null,
       thumbnail: photo?.thumbnail?.src || null,
       photographer: photo?.photographer || null,
