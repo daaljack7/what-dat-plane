@@ -1,4 +1,5 @@
 // Main flight tracking endpoint using AviationStack API
+// Updated to use environment variables
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Credentials', true);
   res.setHeader('Access-Control-Allow-Origin', '*');
