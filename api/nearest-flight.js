@@ -1,8 +1,5 @@
-// Serverless function to fetch nearest flight from OpenSky Network API
-// Simplified version without caching/rate limiting for debugging
-
+// Main flight tracking endpoint using AviationStack API
 export default async function handler(req, res) {
-  // Enable CORS
   res.setHeader('Access-Control-Allow-Credentials', true);
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS');
@@ -22,38 +19,33 @@ export default async function handler(req, res) {
   const latitude = parseFloat(lat);
   const longitude = parseFloat(lon);
 
-  // Define bounding box: ~2 degrees (~220km) around the point
-  const lamin = latitude - 2;
-  const lamax = latitude + 2;
-  const lomin = longitude - 2;
-  const lomax = longitude + 2;
+  // Check if API key is configured
+  if (!process.env.AVIATIONSTACK_API_KEY) {
+    return res.status(503).json({
+      error: 'Flight tracking service not configured',
+      details: 'Please add AVIATIONSTACK_API_KEY to environment variables. Get a free key at https://aviationstack.com/signup/free'
+    });
+  }
 
   try {
-    // Use bounding box to reduce data and improve reliability
-    const url = `https://opensky-network.org/api/states/all?lamin=${lamin}&lomin=${lomin}&lamax=${lamax}&lomax=${lomax}`;
+    // AviationStack real-time flights endpoint
+    const url = `http://api.aviationstack.com/v1/flights?access_key=${process.env.AVIATIONSTACK_API_KEY}&limit=100`;
 
-    const headers = {
-      'Accept': 'application/json',
-      'User-Agent': 'WhatDatPlane/1.0'
-    };
-
-    // Add authentication if credentials are available
-    if (process.env.OPENSKY_USERNAME && process.env.OPENSKY_PASSWORD) {
-      const auth = Buffer.from(`${process.env.OPENSKY_USERNAME}:${process.env.OPENSKY_PASSWORD}`).toString('base64');
-      headers['Authorization'] = `Basic ${auth}`;
-    }
-
-    const response = await fetch(url, { headers });
+    const response = await fetch(url, {
+      headers: {
+        'Accept': 'application/json'
+      }
+    });
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('OpenSky API error:', response.status, errorText);
-      throw new Error(`OpenSky API error: ${response.status} - ${errorText}`);
+      console.error('AviationStack API error:', response.status, errorText);
+      throw new Error(`AviationStack API error: ${response.status}`);
     }
 
     const data = await response.json();
 
-    if (!data.states || data.states.length === 0) {
+    if (!data.data || data.data.length === 0) {
       return res.status(404).json({ error: 'No flights found' });
     }
 
@@ -61,50 +53,37 @@ export default async function handler(req, res) {
     let nearestFlight = null;
     let minDistance = Infinity;
 
-    data.states.forEach((state) => {
-      const [
-        icao24,           // 0
-        callsign,         // 1
-        origin_country,   // 2
-        time_position,    // 3
-        last_contact,     // 4
-        lon_position,     // 5
-        lat_position,     // 6
-        baro_altitude,    // 7
-        on_ground,        // 8
-        velocity,         // 9
-        true_track,       // 10
-        vertical_rate,    // 11
-        sensors,          // 12
-        geo_altitude,     // 13
-        squawk,           // 14
-        spi,              // 15
-        position_source   // 16
-      ] = state;
+    data.data.forEach((flight) => {
+      if (flight.live?.latitude && flight.live?.longitude) {
+        const distance = getDistance(
+          latitude,
+          longitude,
+          flight.live.latitude,
+          flight.live.longitude
+        );
 
-      if (!lat_position || !lon_position || on_ground) {
-        return;
-      }
-
-      const distance = getDistance(latitude, longitude, lat_position, lon_position);
-
-      if (distance < minDistance) {
-        minDistance = distance;
-        nearestFlight = {
-          icao24,
-          callsign: callsign?.trim() || 'Unknown',
-          origin_country,
-          longitude: lon_position,
-          latitude: lat_position,
-          baro_altitude,
-          geo_altitude,
-          velocity,
-          true_track,
-          vertical_rate,
-          on_ground,
-          last_contact,
-          distance: Math.round(distance * 100) / 100,
-        };
+        if (distance < minDistance) {
+          minDistance = distance;
+          nearestFlight = {
+            icao24: flight.flight?.icao || flight.flight?.iata || 'unknown',
+            callsign: flight.flight?.icao || flight.flight?.iata || 'Unknown',
+            origin_country: flight.airline?.name || 'Unknown',
+            longitude: flight.live.longitude,
+            latitude: flight.live.latitude,
+            baro_altitude: flight.live.altitude || 0,
+            geo_altitude: flight.live.altitude || 0,
+            velocity: flight.live.speed_horizontal || 0,
+            true_track: flight.live.direction || 0,
+            vertical_rate: flight.live.speed_vertical || 0,
+            on_ground: flight.live.is_ground || false,
+            last_contact: Math.floor(Date.now() / 1000),
+            distance: Math.round(distance * 100) / 100,
+            // Additional data from AviationStack
+            departure: flight.departure?.airport || 'Unknown',
+            arrival: flight.arrival?.airport || 'Unknown',
+            airline: flight.airline?.name || 'Unknown'
+          };
+        }
       }
     });
 
@@ -115,16 +94,6 @@ export default async function handler(req, res) {
     res.status(200).json(nearestFlight);
   } catch (error) {
     console.error('Error fetching flight data:', error);
-
-    // Provide more helpful error message
-    if (error.message.includes('fetch failed') || error.cause?.code === 'ECONNREFUSED') {
-      return res.status(503).json({
-        error: 'Unable to connect to flight data service',
-        details: 'The OpenSky Network API may be temporarily unavailable or blocking requests from our server. Please try again in a few moments.',
-        errorType: 'CONNECTION_ERROR'
-      });
-    }
-
     res.status(500).json({
       error: 'Failed to fetch flight data',
       details: error.message,
