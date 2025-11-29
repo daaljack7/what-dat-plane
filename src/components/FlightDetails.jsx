@@ -36,9 +36,9 @@ function FlightDetails({ flight, locationName }) {
     return meters ? Math.round(meters * 3.28084) : 0;
   };
 
-  // Convert m/s to knots
-  const msToKnots = (ms) => {
-    return ms ? Math.round(ms * 1.94384) : 0;
+  // Convert m/s to mph
+  const msToMph = (ms) => {
+    return ms ? Math.round(ms * 2.23694) : 0;
   };
 
   // Convert m/s to feet per minute
@@ -136,7 +136,7 @@ function FlightDetails({ flight, locationName }) {
           <div className="info-row">
             <span className="label">Ground Speed:</span>
             <span className="value">
-              {flight.velocity ? `${msToKnots(flight.velocity)} knots` : 'N/A'}
+              {flight.velocity ? `${msToMph(flight.velocity)} mph` : 'N/A'}
             </span>
           </div>
           <div className="info-row">
