@@ -1,4 +1,39 @@
 // Main flight tracking endpoint using AirLabs API
+
+// Airline code to name mapping
+const airlineNames = {
+  'AAL': 'American Airlines',
+  'UAL': 'United Airlines',
+  'DAL': 'Delta Air Lines',
+  'SWA': 'Southwest Airlines',
+  'JBU': 'JetBlue Airways',
+  'ASA': 'Alaska Airlines',
+  'SKW': 'SkyWest Airlines',
+  'FFT': 'Frontier Airlines',
+  'NKS': 'Spirit Airlines',
+  'BAW': 'British Airways',
+  'AFR': 'Air France',
+  'DLH': 'Lufthansa',
+  'KLM': 'KLM Royal Dutch Airlines',
+  'UAE': 'Emirates',
+  'QTR': 'Qatar Airways',
+  'SIA': 'Singapore Airlines',
+  'ANA': 'All Nippon Airways',
+  'JAL': 'Japan Airlines',
+  'CPA': 'Cathay Pacific',
+  'QFA': 'Qantas',
+  'ACA': 'Air Canada',
+  'BAW': 'British Airways',
+  'IBE': 'Iberia',
+  'SAS': 'Scandinavian Airlines',
+  'TAP': 'TAP Air Portugal',
+  'THY': 'Turkish Airlines',
+  'AAR': 'Asiana Airlines',
+  'CCA': 'Air China',
+  'CSN': 'China Southern Airlines',
+  'CES': 'China Eastern Airlines'
+};
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Credentials', true);
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -65,6 +100,11 @@ export default async function handler(req, res) {
 
         if (distance < minDistance) {
           minDistance = distance;
+
+          // Get airline code and convert to full name if available
+          const airlineCode = flight.airline_icao || flight.airline_iata || 'Unknown';
+          const airlineName = airlineNames[airlineCode.toUpperCase()] || airlineCode;
+
           nearestFlight = {
             icao24: flight.hex || flight.reg_number || 'unknown',
             callsign: flight.flight_icao || flight.flight_iata || 'Unknown',
@@ -83,7 +123,7 @@ export default async function handler(req, res) {
             // Additional data from AirLabs
             departure: flight.dep_iata || flight.dep_icao || 'Unknown',
             arrival: flight.arr_iata || flight.arr_icao || 'Unknown',
-            airline: flight.airline_icao || flight.airline_iata || 'Unknown',
+            airline: airlineName,
             aircraft: flight.aircraft_icao || 'Unknown'
           };
         }
