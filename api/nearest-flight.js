@@ -1,5 +1,4 @@
-// Main flight tracking endpoint using AviationStack API
-// Updated to use environment variables
+// Main flight tracking endpoint using AirLabs API
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Credentials', true);
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -21,16 +20,17 @@ export default async function handler(req, res) {
   const longitude = parseFloat(lon);
 
   // Check if API key is configured
-  if (!process.env.AVIATIONSTACK_API_KEY) {
+  if (!process.env.AIRLABS_API_KEY) {
     return res.status(503).json({
       error: 'Flight tracking service not configured',
-      details: 'Please add AVIATIONSTACK_API_KEY to environment variables. Get a free key at https://aviationstack.com/signup/free'
+      details: 'Please add AIRLABS_API_KEY to environment variables. Get a free key at https://airlabs.co/signup'
     });
   }
 
   try {
-    // AviationStack real-time flights endpoint
-    const url = `http://api.aviationstack.com/v1/flights?access_key=${process.env.AVIATIONSTACK_API_KEY}&limit=100`;
+    // AirLabs real-time flights endpoint
+    // Get flights within bounding box
+    const url = `https://airlabs.co/api/v9/flights?api_key=${process.env.AIRLABS_API_KEY}`;
 
     const response = await fetch(url, {
       headers: {
@@ -40,13 +40,13 @@ export default async function handler(req, res) {
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('AviationStack API error:', response.status, errorText);
-      throw new Error(`AviationStack API error: ${response.status}`);
+      console.error('AirLabs API error:', response.status, errorText);
+      throw new Error(`AirLabs API error: ${response.status}`);
     }
 
     const data = await response.json();
 
-    if (!data.data || data.data.length === 0) {
+    if (!data.response || data.response.length === 0) {
       return res.status(404).json({ error: 'No flights found' });
     }
 
@@ -54,35 +54,36 @@ export default async function handler(req, res) {
     let nearestFlight = null;
     let minDistance = Infinity;
 
-    data.data.forEach((flight) => {
-      if (flight.live?.latitude && flight.live?.longitude) {
+    data.response.forEach((flight) => {
+      if (flight.lat && flight.lng) {
         const distance = getDistance(
           latitude,
           longitude,
-          flight.live.latitude,
-          flight.live.longitude
+          flight.lat,
+          flight.lng
         );
 
         if (distance < minDistance) {
           minDistance = distance;
           nearestFlight = {
-            icao24: flight.flight?.icao || flight.flight?.iata || 'unknown',
-            callsign: flight.flight?.icao || flight.flight?.iata || 'Unknown',
-            origin_country: flight.airline?.name || 'Unknown',
-            longitude: flight.live.longitude,
-            latitude: flight.live.latitude,
-            baro_altitude: flight.live.altitude || 0,
-            geo_altitude: flight.live.altitude || 0,
-            velocity: flight.live.speed_horizontal || 0,
-            true_track: flight.live.direction || 0,
-            vertical_rate: flight.live.speed_vertical || 0,
-            on_ground: flight.live.is_ground || false,
+            icao24: flight.hex || flight.reg_number || 'unknown',
+            callsign: flight.flight_icao || flight.flight_iata || 'Unknown',
+            origin_country: flight.flag || 'Unknown',
+            longitude: flight.lng,
+            latitude: flight.lat,
+            baro_altitude: flight.alt || 0,
+            geo_altitude: flight.alt || 0,
+            velocity: flight.speed || 0,
+            true_track: flight.dir || 0,
+            vertical_rate: flight.v_speed || 0,
+            on_ground: flight.status === 'en-route' ? false : true,
             last_contact: Math.floor(Date.now() / 1000),
             distance: Math.round(distance * 100) / 100,
-            // Additional data from AviationStack
-            departure: flight.departure?.airport || 'Unknown',
-            arrival: flight.arrival?.airport || 'Unknown',
-            airline: flight.airline?.name || 'Unknown'
+            // Additional data from AirLabs
+            departure: flight.dep_iata || flight.dep_icao || 'Unknown',
+            arrival: flight.arr_iata || flight.arr_icao || 'Unknown',
+            airline: flight.airline_icao || flight.airline_iata || 'Unknown',
+            aircraft: flight.aircraft_icao || 'Unknown'
           };
         }
       }
