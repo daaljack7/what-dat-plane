@@ -34,6 +34,91 @@ const airlineNames = {
   'CES': 'China Eastern Airlines'
 };
 
+// Airport code to name mapping (major airports)
+const airportNames = {
+  // US Major Airports
+  'ATL': 'Atlanta Hartsfield-Jackson',
+  'LAX': 'Los Angeles International',
+  'ORD': 'Chicago O\'Hare',
+  'DFW': 'Dallas/Fort Worth',
+  'DEN': 'Denver International',
+  'JFK': 'New York JFK',
+  'SFO': 'San Francisco International',
+  'LAS': 'Las Vegas McCarran',
+  'SEA': 'Seattle-Tacoma',
+  'MCO': 'Orlando International',
+  'EWR': 'Newark Liberty',
+  'MIA': 'Miami International',
+  'PHX': 'Phoenix Sky Harbor',
+  'IAH': 'Houston George Bush',
+  'BOS': 'Boston Logan',
+  'MSP': 'Minneapolis-St. Paul',
+  'DTW': 'Detroit Metropolitan',
+  'PHL': 'Philadelphia International',
+  'LGA': 'New York LaGuardia',
+  'BWI': 'Baltimore/Washington',
+  'SLC': 'Salt Lake City',
+  'DCA': 'Washington Reagan',
+  'IAD': 'Washington Dulles',
+  'MDW': 'Chicago Midway',
+  'SAN': 'San Diego International',
+  'HNL': 'Honolulu International',
+  'TPA': 'Tampa International',
+  'PDX': 'Portland International',
+  'STL': 'St. Louis Lambert',
+  'BNA': 'Nashville International',
+  'AUS': 'Austin-Bergstrom',
+  'DAL': 'Dallas Love Field',
+  'HOU': 'Houston Hobby',
+  'OAK': 'Oakland International',
+  'SJC': 'San Jose International',
+  'RDU': 'Raleigh-Durham',
+  'SNA': 'John Wayne Airport',
+  'SMF': 'Sacramento International',
+  'SAT': 'San Antonio International',
+  'RSW': 'Southwest Florida',
+  'PIT': 'Pittsburgh International',
+  'CMH': 'Columbus John Glenn',
+  'IND': 'Indianapolis International',
+  'CLT': 'Charlotte Douglas',
+  'CVG': 'Cincinnati Northern Kentucky',
+  'JAX': 'Jacksonville International',
+  'MKE': 'Milwaukee Mitchell',
+  'BUR': 'Burbank Bob Hope',
+  'ONT': 'Ontario International',
+  'ABQ': 'Albuquerque Sunport',
+  'OMA': 'Omaha Eppley',
+  'RNO': 'Reno-Tahoe',
+  'ANC': 'Anchorage International',
+
+  // International Major Airports
+  'LHR': 'London Heathrow',
+  'CDG': 'Paris Charles de Gaulle',
+  'FRA': 'Frankfurt Airport',
+  'AMS': 'Amsterdam Schiphol',
+  'MAD': 'Madrid Barajas',
+  'FCO': 'Rome Fiumicino',
+  'MUC': 'Munich Airport',
+  'YYZ': 'Toronto Pearson',
+  'YVR': 'Vancouver International',
+  'MEX': 'Mexico City International',
+  'GRU': 'São Paulo Guarulhos',
+  'EZE': 'Buenos Aires Ezeiza',
+  'NRT': 'Tokyo Narita',
+  'HND': 'Tokyo Haneda',
+  'ICN': 'Seoul Incheon',
+  'PVG': 'Shanghai Pudong',
+  'PEK': 'Beijing Capital',
+  'HKG': 'Hong Kong International',
+  'SIN': 'Singapore Changi',
+  'BKK': 'Bangkok Suvarnabhumi',
+  'DXB': 'Dubai International',
+  'DOH': 'Doha Hamad',
+  'SYD': 'Sydney Kingsford Smith',
+  'MEL': 'Melbourne Airport',
+  'AKL': 'Auckland Airport'
+};
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Credentials', true);
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -105,6 +190,12 @@ export default async function handler(req, res) {
           const airlineCode = flight.airline_icao || flight.airline_iata || 'Unknown';
           const airlineName = airlineNames[airlineCode.toUpperCase()] || airlineCode;
 
+          // Get airport codes and convert to full names if available
+          const depCode = flight.dep_iata || flight.dep_icao || 'Unknown';
+          const arrCode = flight.arr_iata || flight.arr_icao || 'Unknown';
+          const departureName = airportNames[depCode.toUpperCase()] || depCode;
+          const arrivalName = airportNames[arrCode.toUpperCase()] || arrCode;
+
           nearestFlight = {
             icao24: flight.hex || flight.reg_number || 'unknown',
             callsign: flight.flight_icao || flight.flight_iata || 'Unknown',
@@ -121,8 +212,8 @@ export default async function handler(req, res) {
             distance: Math.round(distance * 100) / 100,
             registration: flight.reg_number || null,
             // Additional data from AirLabs
-            departure: flight.dep_iata || flight.dep_icao || 'Unknown',
-            arrival: flight.arr_iata || flight.arr_icao || 'Unknown',
+            departure: departureName,
+            arrival: arrivalName,
             airline: airlineName,
             aircraft: flight.aircraft_icao || 'Unknown'
           };
