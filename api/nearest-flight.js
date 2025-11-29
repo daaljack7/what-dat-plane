@@ -31,12 +31,19 @@ export default async function handler(req, res) {
   try {
     // Use bounding box to reduce data and improve reliability
     const url = `https://opensky-network.org/api/states/all?lamin=${lamin}&lomin=${lomin}&lamax=${lamax}&lomax=${lomax}`;
-    const response = await fetch(url, {
-      headers: {
-        'Accept': 'application/json',
-        'User-Agent': 'WhatDatPlane/1.0'
-      },
-    });
+
+    const headers = {
+      'Accept': 'application/json',
+      'User-Agent': 'WhatDatPlane/1.0'
+    };
+
+    // Add authentication if credentials are available
+    if (process.env.OPENSKY_USERNAME && process.env.OPENSKY_PASSWORD) {
+      const auth = Buffer.from(`${process.env.OPENSKY_USERNAME}:${process.env.OPENSKY_PASSWORD}`).toString('base64');
+      headers['Authorization'] = `Basic ${auth}`;
+    }
+
+    const response = await fetch(url, { headers });
 
     if (!response.ok) {
       const errorText = await response.text();
@@ -108,7 +115,21 @@ export default async function handler(req, res) {
     res.status(200).json(nearestFlight);
   } catch (error) {
     console.error('Error fetching flight data:', error);
-    res.status(500).json({ error: 'Failed to fetch flight data', details: error.message });
+
+    // Provide more helpful error message
+    if (error.message.includes('fetch failed') || error.cause?.code === 'ECONNREFUSED') {
+      return res.status(503).json({
+        error: 'Unable to connect to flight data service',
+        details: 'The OpenSky Network API may be temporarily unavailable or blocking requests from our server. Please try again in a few moments.',
+        errorType: 'CONNECTION_ERROR'
+      });
+    }
+
+    res.status(500).json({
+      error: 'Failed to fetch flight data',
+      details: error.message,
+      errorType: error.name
+    });
   }
 }
 
