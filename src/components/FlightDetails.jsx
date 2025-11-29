@@ -152,6 +152,7 @@ function FlightDetails({ flight, locationName }) {
         icao24={flight.icao24}
         callsign={flight.callsign}
         registration={flight.registration}
+        aircraft={flight.aircraft}
       />
 
       {loadingTrack && (

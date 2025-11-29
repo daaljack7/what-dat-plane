@@ -11,55 +11,85 @@ export default async function handler(req, res) {
     return;
   }
 
-  const { icao24, registration } = req.query;
+  const { icao24, registration, aircraft } = req.query;
 
-  if (!icao24 && !registration) {
-    return res.status(400).json({ error: 'Either ICAO24 or registration is required' });
+  if (!icao24 && !registration && !aircraft) {
+    return res.status(400).json({ error: 'ICAO24, registration, or aircraft type is required' });
   }
 
   try {
-    // Only proceed if we have a registration number
-    // OpenSky Network API is blocked from Vercel, so we can't look up registration from ICAO24
-    if (!registration) {
-      return res.status(200).json({
-        registration: null,
-        photoUrl: null,
-        thumbnail: null,
-        photographer: null,
-        message: 'Registration number not available - photo lookup requires aircraft registration'
-      });
-    }
+    let photoData = null;
+    let searchMethod = null;
 
-    const photoResponse = await fetch(
-      `https://api.planespotters.net/pub/photos/reg/${registration}`,
-      {
-        headers: {
-          'Accept': 'application/json',
-        },
+    // Try registration first if available
+    if (registration) {
+      const photoResponse = await fetch(
+        `https://api.planespotters.net/pub/photos/reg/${registration}`,
+        {
+          headers: {
+            'Accept': 'application/json',
+          },
+        }
+      );
+
+      if (photoResponse.ok) {
+        photoData = await photoResponse.json();
+        searchMethod = 'registration';
       }
-    );
+    }
 
-    if (!photoResponse.ok) {
+    // If no registration or no photo found, try aircraft type
+    if (!photoData && aircraft && aircraft !== 'Unknown') {
+      const typeResponse = await fetch(
+        `https://api.planespotters.net/pub/photos/type/${aircraft}`,
+        {
+          headers: {
+            'Accept': 'application/json',
+          },
+        }
+      );
+
+      if (typeResponse.ok) {
+        photoData = await typeResponse.json();
+        searchMethod = 'aircraft_type';
+      }
+    }
+
+    if (!photoData) {
       return res.status(200).json({
-        registration: registration,
+        registration: registration || null,
+        aircraft: aircraft || null,
         photoUrl: null,
         thumbnail: null,
         photographer: null,
-        message: 'No photo found for this aircraft on Planespotters.net'
+        message: 'No photo found for this aircraft'
       });
     }
 
-    const photoData = await photoResponse.json();
     const photo = photoData.photos && photoData.photos.length > 0
       ? photoData.photos[0]
       : null;
 
+    if (!photo) {
+      return res.status(200).json({
+        registration: registration || null,
+        aircraft: aircraft || null,
+        photoUrl: null,
+        thumbnail: null,
+        photographer: null,
+        message: 'No photo found for this aircraft'
+      });
+    }
+
     const result = {
-      registration: registration,
+      registration: registration || null,
+      aircraft: aircraft || null,
       photoUrl: photo?.image?.src || null,
       thumbnail: photo?.thumbnail?.src || null,
       photographer: photo?.photographer || null,
       link: photo?.link || null,
+      searchMethod: searchMethod,
+      isGeneric: searchMethod === 'aircraft_type'
     };
 
     res.status(200).json(result);
