@@ -75,6 +75,18 @@ function FlightDetails({ flight, locationName }) {
             <span className="label">Callsign:</span>
             <span className="value callsign">{flight.callsign}</span>
           </div>
+          {flight.airline && flight.airline !== 'Unknown' && (
+            <div className="info-row">
+              <span className="label">Airline:</span>
+              <span className="value">{flight.airline}</span>
+            </div>
+          )}
+          {flight.departure && flight.departure !== 'Unknown' && flight.arrival && flight.arrival !== 'Unknown' && (
+            <div className="info-row">
+              <span className="label">Route:</span>
+              <span className="value">{flight.departure} → {flight.arrival}</span>
+            </div>
+          )}
           <div className="info-row">
             <span className="label">ICAO24:</span>
             <span className="value">{flight.icao24.toUpperCase()}</span>

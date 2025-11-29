@@ -79,6 +79,7 @@ export default async function handler(req, res) {
             on_ground: flight.status === 'en-route' ? false : true,
             last_contact: Math.floor(Date.now() / 1000),
             distance: Math.round(distance * 100) / 100,
+            registration: flight.reg_number || null,
             // Additional data from AirLabs
             departure: flight.dep_iata || flight.dep_icao || 'Unknown',
             arrival: flight.arr_iata || flight.arr_icao || 'Unknown',
