@@ -84,7 +84,7 @@ export default async function handler(req, res) {
     const result = {
       registration: registration || null,
       aircraft: aircraft || null,
-      photoUrl: photo?.image?.src || null,
+      photoUrl: photo?.thumbnail_large?.src || photo?.image?.src || null,
       thumbnail: photo?.thumbnail?.src || null,
       photographer: photo?.photographer || null,
       link: photo?.link || null,
